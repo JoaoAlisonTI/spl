@@ -1,0 +1,12 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary-color: #1E6F5C;
+    --bg-color: #f0f4f8;
+    --white: #fff;
+    --font-primary: Arial, Helvetica, sans-serif;
+}
