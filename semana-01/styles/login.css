@@ -93,3 +93,10 @@
 .main-login .div-footer p a:hover {
     text-decoration: underline;
 }
+
+.div-error {
+    margin-top: 16px;
+    font-size: 14px;
+    color: red;
+    display: none;
+}
