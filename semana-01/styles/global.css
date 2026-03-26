@@ -21,3 +21,7 @@ body {
     font-family: var(--font-primary);
     height: 100vh;
 }
+
+main {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}

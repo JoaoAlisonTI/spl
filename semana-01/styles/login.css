@@ -48,8 +48,14 @@
     background-color: var(--bg-color);
     padding: 16px;
     border-radius: 12px;
-    outline: none;
     border: none;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.main-login form label input:focus {
+    background-color: var(--white);
+    outline: 1px solid var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(31, 122, 99, 0.15);
 }
 
 .main-login form button {
@@ -61,6 +67,11 @@
     font-weight: bold;
     padding: 16px;
     border-radius: 12px;
+    cursor: pointer;
+}
+.main-login form button:hover {
+    opacity: 0.9;
+    transition-delay: 0.2s;
 }
 
 .main-login .div-footer {
@@ -77,6 +88,7 @@
     text-decoration: none;
     color: var(--primary-color);
     font-weight: bold;
+    cursor: pointer;
 }
 .main-login .div-footer p a:hover {
     text-decoration: underline;
