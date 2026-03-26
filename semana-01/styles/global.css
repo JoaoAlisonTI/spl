@@ -6,7 +6,18 @@
 
 :root {
     --primary-color: #1E6F5C;
-    --bg-color: #f0f4f8;
+    --secondary-color: #64748b;
+    --bg-color: #edf1f5;
     --white: #fff;
     --font-primary: Arial, Helvetica, sans-serif;
+}
+
+body {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--bg-color);
+    font-family: var(--font-primary);
+    height: 100vh;
 }
