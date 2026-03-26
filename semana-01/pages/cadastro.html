@@ -3,9 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../styles/global.css">
+    <link rel="stylesheet" href="../styles/cadastro.css">
+
     <title>SPL - CADASTRO</title>
 </head>
 <body>
-    
+    <main class="main-cadastro">
+        <div class="div-header">
+            <span>+</span>
+            <h2>SPL</h2>
+            <p>Saúde em Primeiro Lugar</p>
+        </div>
+
+        <h2>Criar sua conta</h2>
+
+        <form>
+            <label for="nome">
+                Nome completo
+                <input id="input-nome" type="text" placeholder="Fulano de tal..." required />
+            </label>
+
+            <label for="cpf">
+                CPF
+                <input id="input-cpf" type="text" placeholder="000.000.000-00" required />
+            </label>
+
+            <label for="telefone">
+                Telefone
+                <input id="input-telefone" type="tel" placeholder="(00) 00000-0000" required />
+            </label>
+
+            <label for="email">
+                E-mail
+                <input id="input-email" type="email" placeholder="example@gmail.com" required />
+            </label>
+
+            <label for="password">
+                Senha
+                <input id="input-password" type="password" placeholder="Mínimo 8 digitos" required />
+            </label>
+
+            <label for="confirmar-password">
+                Confirmar senha
+                <input id="input-confirmar-password" type="password" placeholder="Mínimo 8 digitos" required />
+            </label>
+
+            <button type="submit">Criar conta</button>
+        </form>
+
+        <div class="div-footer">
+            <p>Já tem uma conta? <a href="../index.html">Fazer login</a></p>
+        </div>
+    </main>
 </body>
 </html>

@@ -1,4 +1,4 @@
-.main-login {
+.main-cadastro {
     background-color: var(--white);
     display: flex;
     flex-direction: column;
@@ -29,22 +29,22 @@
     font-size: 14px;
 }
 
-.main-login > h2 {
+.main-cadastro > h2 {
     padding-bottom: 20px;
 }
 
-.main-login form {
+.main-cadastro form {
     display: flex;
     flex-direction: column;
     gap: 20px;
 }
-.main-login form label {
+.main-cadastro form label {
     display: flex;
     flex-direction: column;
     gap: 8px;
     font-size: 14px;
 }
-.main-login form label input {
+.main-cadastro form label input {
     background-color: var(--bg-color);
     padding: 16px;
     border-radius: 12px;
@@ -52,13 +52,13 @@
     cursor: auto;
     transition: 0.2s;
 }
-.main-login form label input:focus {
+.main-cadastro form label input:focus {
     background-color: var(--white);
     outline: 1px solid var(--primary-color);
     box-shadow: 0 0 0 3px rgba(31, 122, 99, 0.15);
 }
 
-.main-login form button {
+.main-cadastro form button {
     background-color: var(--primary-color);
     border: none;
     outline: none;
@@ -69,27 +69,27 @@
     border-radius: 12px;
     cursor: pointer;
 }
-.main-login form button:hover {
+.main-cadastro form button:hover {
     opacity: 0.9;
     transition-delay: 0.2s;
 }
 
-.main-login .div-footer {
+.main-cadastro .div-footer {
     display: flex;
     align-items: center;
     justify-content: center;
     padding-top: 48px;
     padding-bottom: 8px;
 }
-.main-login .div-footer p {
+.main-cadastro .div-footer p {
     font-size: 14px;
 }
-.main-login .div-footer p a {
+.main-cadastro .div-footer p a {
     text-decoration: none;
     color: var(--primary-color);
     font-weight: bold;
     cursor: pointer;
 }
-.main-login .div-footer p a:hover {
+.main-cadastro .div-footer p a:hover {
     text-decoration: underline;
 }
