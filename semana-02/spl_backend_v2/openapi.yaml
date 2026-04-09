@@ -1,0 +1,687 @@
+openapi: 3.0.3
+
+info:
+  title: SPL — Saúde em Primeiro Lugar
+  description: |
+    Backend mock do sistema de triagem e acompanhamento personalizado de pacientes.
+
+    ## Autenticação
+    A maioria dos endpoints exige autenticação via token Bearer.
+    Obtenha o token chamando `/api/auth/cadastro` ou `/api/auth/login`
+    e inclua-o em todas as requisições protegidas:
+
+    ```
+    Authorization: Bearer <seu_token>
+    ```
+
+    ## Fluxo esperado
+    1. `POST /api/auth/cadastro` → recebe token + `triagem_concluida: false`
+    2. `POST /api/triagem` → classifica o usuário em linhas de cuidado
+    3. `GET  /api/usuario/dashboard` → retorna conteúdo personalizado
+
+    ## Linhas de cuidado
+    Um usuário pode pertencer a múltiplas linhas simultaneamente.
+    As recomendações do dashboard são deduplicadas por `slug`.
+
+    | Linha        | Ativada quando                          |
+    |-------------|------------------------------------------|
+    | diabetica   | "diabetes" informado na triagem          |
+    | obesidade   | IMC ≥ 30                                 |
+    | hipertensos | "hipertensao" informado na triagem       |
+    | ativa       | sem condições diagnosticadas e IMC < 30  |
+
+  version: 1.0.0
+  contact:
+    name: Trilha de Nivelamento Frontend — SPL
+
+servers:
+  - url: http://localhost:5000
+    description: Servidor local de desenvolvimento
+
+tags:
+  - name: Autenticação
+    description: Cadastro, login e logout
+  - name: Triagem
+    description: Coleta de dados e classificação em linhas de cuidado
+  - name: Usuário
+    description: Perfil e dashboard personalizado
+  - name: Utilitário
+    description: Endpoints de suporte
+
+# =============================================================
+#  PATHS
+# =============================================================
+paths:
+
+  # ── Utilitário ─────────────────────────────────────────────
+  /api/health:
+    get:
+      tags: [Utilitário]
+      summary: Verifica se a API está no ar
+      responses:
+        "200":
+          description: API funcionando
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  sistema:
+                    type: string
+                    example: SPL Mock Backend
+
+  # ── Autenticação ───────────────────────────────────────────
+  /api/auth/cadastro:
+    post:
+      tags: [Autenticação]
+      summary: Cria um novo usuário (RF-01)
+      description: |
+        Valida os dados, cria o usuário no banco e retorna um token de sessão.
+        Após o cadastro, `triagem_concluida` sempre será `false` —
+        o frontend deve redirecionar para `/triagem` (RF-10).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CadastroInput"
+            examples:
+              joao:
+                summary: Exemplo — João Silva
+                value:
+                  nome: João Silva
+                  cpf: "123.456.789-00"
+                  telefone: "(85) 99999-0000"
+                  email: joao@email.com
+                  senha: minhasenha123
+      responses:
+        "201":
+          description: Usuário criado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Dados inválidos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErroValidacao"
+              examples:
+                cpf_invalido:
+                  value:
+                    erro: Dados inválidos.
+                    campos:
+                      cpf: CPF inválido. Informe 11 dígitos.
+        "409":
+          description: E-mail ou CPF já cadastrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Erro"
+              examples:
+                email_duplicado:
+                  value:
+                    erro: Este e-mail já está em uso.
+
+  /api/auth/login:
+    post:
+      tags: [Autenticação]
+      summary: Autentica o usuário (RF-05)
+      description: |
+        Verifica as credenciais e retorna um token de sessão.
+        O campo `triagem_concluida` indica para onde redirecionar:
+        - `false` → `/triagem`
+        - `true`  → `/dashboard`
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+            examples:
+              exemplo:
+                value:
+                  email: joao@email.com
+                  senha: minhasenha123
+      responses:
+        "200":
+          description: Login realizado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Campos ausentes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Erro"
+        "401":
+          description: Credenciais inválidas (RF-07)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Erro"
+              examples:
+                credenciais_invalidas:
+                  value:
+                    erro: E-mail ou senha incorretos.
+
+  /api/auth/logout:
+    post:
+      tags: [Autenticação]
+      summary: Invalida o token de sessão (RF-26)
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Logout realizado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mensagem:
+                    type: string
+                    example: Logout realizado com sucesso.
+        "401":
+          $ref: "#/components/responses/NaoAutenticado"
+
+  # ── Triagem ────────────────────────────────────────────────
+  /api/triagem:
+    post:
+      tags: [Triagem]
+      summary: Envia os dados da triagem (RF-11 a RF-14)
+      description: |
+        Recebe os dados coletados na tela de triagem, calcula o IMC,
+        classifica o usuário em linhas de cuidado e persiste tudo no banco.
+
+        **Regras de classificação:**
+        - IMC = peso(kg) / altura(m)²
+        - Linha `diabetica` → condição "diabetes" informada
+        - Linha `obesidade` → IMC ≥ 30
+        - Linha `hipertensos` → condição "hipertensao" informada
+        - Linha `ativa` → sem condições + IMC < 30 + atividade moderada ou mais
+
+        A triagem só pode ser realizada uma vez (RF-15).
+        Retorna 409 se já existir.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TriagemInput"
+            examples:
+              uc03_diabetico:
+                summary: "UC-03 — Apenas linha diabética"
+                value:
+                  data_nascimento: "1975-03-12"
+                  sexo: masculino
+                  peso_kg: 82.0
+                  altura_cm: 175.0
+                  condicoes: [diabetes]
+                  usa_medicamentos: true
+                  nivel_atividade: Levemente ativo
+              uc04_duas_linhas:
+                summary: "UC-04 — Diabética + Obesidade"
+                value:
+                  data_nascimento: "1980-07-05"
+                  sexo: feminino
+                  peso_kg: 95.0
+                  altura_cm: 162.0
+                  condicoes: [diabetes, obesidade]
+                  usa_medicamentos: true
+                  nivel_atividade: Sedentária
+              uc05_ativo:
+                summary: "UC-05 — Sem condições, linha ativa"
+                value:
+                  data_nascimento: "1995-11-22"
+                  sexo: masculino
+                  peso_kg: 72.0
+                  altura_cm: 178.0
+                  condicoes: []
+                  usa_medicamentos: false
+                  nivel_atividade: Moderadamente ativo
+      responses:
+        "201":
+          description: Triagem salva e linhas de cuidado classificadas
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TriagemResponse"
+        "400":
+          description: Campos obrigatórios ausentes ou inválidos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErroValidacao"
+        "401":
+          $ref: "#/components/responses/NaoAutenticado"
+        "409":
+          description: Triagem já realizada (RF-15)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Erro"
+              examples:
+                ja_realizada:
+                  value:
+                    erro: Triagem já realizada. Use PUT para atualizar.
+
+    get:
+      tags: [Triagem]
+      summary: Consulta a triagem do usuário logado
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Dados da triagem
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TriagemDetalhada"
+        "401":
+          $ref: "#/components/responses/NaoAutenticado"
+        "404":
+          description: Triagem ainda não realizada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Erro"
+
+  # ── Usuário / Dashboard ────────────────────────────────────
+  /api/usuario/perfil:
+    get:
+      tags: [Usuário]
+      summary: Retorna dados básicos do usuário autenticado
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Perfil do usuário
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PerfilUsuario"
+        "401":
+          $ref: "#/components/responses/NaoAutenticado"
+
+  /api/usuario/dashboard:
+    get:
+      tags: [Usuário]
+      summary: Retorna o dashboard personalizado (RF-18 a RF-23)
+      description: |
+        Monta o conteúdo do dashboard com base nas linhas de cuidado
+        ativas do usuário. As recomendações são **deduplicadas por slug**
+        (Regra de Negócio 5.2): se duas linhas têm a mesma recomendação,
+        ela aparece apenas uma vez, pela linha de maior prioridade.
+
+        Se a triagem ainda não foi concluída, retorna 404 com
+        `redirecionar_para: "/triagem"` — o frontend deve usar esse
+        campo para redirecionar o usuário (RF-15).
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Conteúdo personalizado do dashboard
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardResponse"
+              examples:
+                uc03_dashboard:
+                  summary: "UC-03 — Usuário diabético"
+                  value:
+                    saudacao: "Olá, João!"
+                    perfil_saude:
+                      imc: 26.8
+                      classificacao: Sobrepeso
+                      peso_kg: 82.0
+                      altura_cm: 175.0
+                      linhas_ativas: [diabetica]
+                      nivel_atividade: Levemente ativo
+                      condicoes: [diabetes]
+                    recomendacoes:
+                      - slug: controle-glicemico
+                        titulo: Monitore sua glicemia
+                        texto: Meça sua glicemia em jejum regularmente e anote os valores.
+                        cor: green
+                        linha: diabetica
+                    metas:
+                      - titulo: Medir glicemia
+                        meta: 7 medições esta semana
+                        unidade: medições
+        "401":
+          $ref: "#/components/responses/NaoAutenticado"
+        "404":
+          description: Triagem pendente — redirecionar para /triagem
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  erro:
+                    type: string
+                    example: Triagem pendente.
+                  redirecionar_para:
+                    type: string
+                    example: /triagem
+
+# =============================================================
+#  COMPONENTS
+# =============================================================
+components:
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: hex
+      description: Token retornado pelo login ou cadastro. Armazene como `spl_token` no localStorage.
+
+  responses:
+    NaoAutenticado:
+      description: Token ausente ou inválido (RF-09)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Erro"
+          examples:
+            nao_autenticado:
+              value:
+                erro: Não autenticado. Faça login primeiro.
+
+  schemas:
+
+    # ── Inputs ───────────────────────────────────────────────
+    CadastroInput:
+      type: object
+      required: [nome, cpf, telefone, email, senha]
+      properties:
+        nome:
+          type: string
+          example: João Silva
+        cpf:
+          type: string
+          description: Aceita com ou sem formatação (pontos e traço)
+          example: "123.456.789-00"
+        telefone:
+          type: string
+          example: "(85) 99999-0000"
+        email:
+          type: string
+          format: email
+          example: joao@email.com
+        senha:
+          type: string
+          minLength: 8
+          example: minhasenha123
+
+    LoginInput:
+      type: object
+      required: [email, senha]
+      properties:
+        email:
+          type: string
+          format: email
+          example: joao@email.com
+        senha:
+          type: string
+          example: minhasenha123
+
+    TriagemInput:
+      type: object
+      required:
+        - data_nascimento
+        - sexo
+        - peso_kg
+        - altura_cm
+        - condicoes
+        - usa_medicamentos
+        - nivel_atividade
+      properties:
+        data_nascimento:
+          type: string
+          format: date
+          example: "1975-03-12"
+        sexo:
+          type: string
+          enum: [masculino, feminino]
+          example: masculino
+        peso_kg:
+          type: number
+          format: float
+          minimum: 1
+          example: 82.0
+        altura_cm:
+          type: number
+          format: float
+          minimum: 1
+          example: 175.0
+        condicoes:
+          type: array
+          description: Lista de condições diagnosticadas. Use lista vazia se nenhuma.
+          items:
+            type: string
+            enum: [diabetes, hipertensao, obesidade, nenhuma]
+          example: [diabetes]
+        usa_medicamentos:
+          type: boolean
+          example: true
+        nivel_atividade:
+          type: string
+          enum:
+            - Sedentária
+            - Levemente ativo
+            - Moderadamente ativo
+            - Muito ativo
+          example: Levemente ativo
+
+    # ── Responses ────────────────────────────────────────────
+    AuthResponse:
+      type: object
+      properties:
+        mensagem:
+          type: string
+          example: Login realizado com sucesso.
+        token:
+          type: string
+          description: Armazene como `spl_token` no localStorage
+          example: a3f8c2d1...
+        triagem_concluida:
+          type: boolean
+          description: false → redirecionar para /triagem; true → redirecionar para /dashboard
+          example: false
+        usuario:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            nome:
+              type: string
+              example: João Silva
+            email:
+              type: string
+              example: joao@email.com
+
+    TriagemResponse:
+      type: object
+      properties:
+        mensagem:
+          type: string
+          example: Triagem salva com sucesso.
+        imc:
+          type: number
+          example: 26.8
+        classificacao:
+          type: string
+          enum:
+            - Abaixo do peso
+            - Normal
+            - Sobrepeso
+            - Obesidade Grau I
+            - Obesidade Grau II
+            - Obesidade Grau III
+          example: Sobrepeso
+        linhas_cuidado:
+          type: array
+          items:
+            type: string
+            enum: [diabetica, obesidade, hipertensos, ativa]
+          example: [diabetica]
+
+    TriagemDetalhada:
+      allOf:
+        - $ref: "#/components/schemas/TriagemInput"
+        - type: object
+          properties:
+            imc:
+              type: number
+              example: 26.8
+            classificacao_imc:
+              type: string
+              example: Sobrepeso
+            linhas_cuidado:
+              type: array
+              items:
+                type: string
+              example: [diabetica]
+
+    PerfilUsuario:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        nome:
+          type: string
+          example: João Silva
+        email:
+          type: string
+          example: joao@email.com
+        cpf:
+          type: string
+          example: "12345678900"
+        telefone:
+          type: string
+          example: "(85) 99999-0000"
+        triagem_concluida:
+          type: boolean
+          example: true
+        criado_em:
+          type: string
+          format: datetime
+          example: "2024-01-15 10:30:00"
+
+    Recomendacao:
+      type: object
+      properties:
+        slug:
+          type: string
+          description: Identificador único. Usado na deduplication (RN-5.2).
+          example: controle-glicemico
+        titulo:
+          type: string
+          example: Monitore sua glicemia
+        texto:
+          type: string
+          example: Meça sua glicemia em jejum regularmente e anote os valores.
+        cor:
+          type: string
+          description: Cor de destaque da linha de cuidado de origem
+          enum: [green, amber, red, blue]
+          example: green
+        linha:
+          type: string
+          description: Linha de cuidado de origem desta recomendação
+          enum: [diabetica, obesidade, hipertensos, ativa]
+          example: diabetica
+
+    Meta:
+      type: object
+      properties:
+        titulo:
+          type: string
+          example: Medir glicemia
+        meta:
+          type: string
+          example: 7 medições esta semana
+        unidade:
+          type: string
+          example: medições
+
+    DashboardResponse:
+      type: object
+      properties:
+        saudacao:
+          type: string
+          description: Primeiro nome do usuário (RF-18)
+          example: "Olá, João!"
+        perfil_saude:
+          type: object
+          description: Resumo do perfil de saúde (RF-19)
+          properties:
+            imc:
+              type: number
+              example: 26.8
+            classificacao:
+              type: string
+              example: Sobrepeso
+            peso_kg:
+              type: number
+              example: 82.0
+            altura_cm:
+              type: number
+              example: 175.0
+            linhas_ativas:
+              type: array
+              items:
+                type: string
+              example: [diabetica]
+            nivel_atividade:
+              type: string
+              example: Levemente ativo
+            condicoes:
+              type: array
+              items:
+                type: string
+              example: [diabetes]
+        recomendacoes:
+          type: array
+          description: Lista deduplicada de recomendações (RF-20, RF-21, RF-22, RF-23, RN-5.2)
+          items:
+            $ref: "#/components/schemas/Recomendacao"
+        metas:
+          type: array
+          description: Metas semanais personalizadas (RF-24)
+          items:
+            $ref: "#/components/schemas/Meta"
+
+    # ── Erros ────────────────────────────────────────────────
+    Erro:
+      type: object
+      properties:
+        erro:
+          type: string
+          example: Mensagem de erro.
+
+    ErroValidacao:
+      type: object
+      properties:
+        erro:
+          type: string
+          example: Dados inválidos.
+        campos:
+          type: object
+          additionalProperties:
+            type: string
+          example:
+            cpf: CPF inválido. Informe 11 dígitos.
+            email: Formato de e-mail inválido.

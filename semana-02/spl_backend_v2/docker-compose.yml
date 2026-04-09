@@ -1,0 +1,56 @@
+# =============================================================
+#  docker-compose.yml — SPL Backend Mock
+# =============================================================
+#
+#  Como usar:
+#
+#    Subir o serviço:
+#      docker compose up
+#
+#    Subir em background (detached):
+#      docker compose up -d
+#
+#    Ver logs em tempo real:
+#      docker compose logs -f
+#
+#    Parar tudo:
+#      docker compose down
+#
+#    Parar E apagar o banco de dados:
+#      docker compose down -v
+#
+#  Após subir, acesse:
+#    API:        http://localhost:5000/api/health
+#    Swagger UI: http://localhost:5000/docs
+# =============================================================
+
+services:
+  spl-backend:
+    # Constrói a imagem a partir do Dockerfile neste diretório
+    build: .
+
+    # Nome amigável para o container
+    container_name: spl-backend
+
+    # Mapeia a porta 5000 do container para a porta 5000 do host.
+    # Formato: "porta-do-host:porta-do-container"
+    ports:
+      - "5000:5000"
+
+    # Volumes: garante que o banco de dados SQLite persista
+    # mesmo que o container seja destruído e recriado.
+    # O diretório ./data no seu computador é montado em /app/data
+    # dentro do container.
+    volumes:
+      - ./data:/app/data
+
+    # Variáveis de ambiente passadas para o container.
+    # Sobrescrevem os valores padrão do Dockerfile.
+    environment:
+      - FLASK_ENV=development
+      - DB_PATH=/app/data/spl.db
+
+    # Reinicia automaticamente se o container cair por algum erro.
+    # "unless-stopped" = reinicia sempre, exceto se você parar
+    # manualmente com "docker compose down".
+    restart: unless-stopped
