@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
 import Header from '../components/Header'
-import '../styles/login.css'
 
 function Login() {
   const [form, setForm] = useState({ email: '', senha: '' })
@@ -56,13 +55,13 @@ function Login() {
   }
 
   return (
-    <main className="main-login">
+    <main className="bg-white flex flex-col w-full max-w-[400px] p-7 rounded-xl shadow-login">
       <Header />
 
-      <h2>Entrar</h2>
+      <h2 className="pb-5 text-xl font-bold">Entrar</h2>
 
-      <form onSubmit={handleSubmit}>
-        <label>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        <label className="flex flex-col gap-2 text-sm">
           E-mail
           <input
             name="email"
@@ -70,10 +69,11 @@ function Login() {
             required
             value={form.email}
             onChange={handleChange}
+            className="bg-bg-custom p-4 rounded-xl border-none font-primary text-sm transition-all focus:bg-white focus:outline focus:outline-1 focus:outline-primary focus:ring-4 focus:ring-primary/10"
           />
         </label>
 
-        <label>
+        <label className="flex flex-col gap-2 text-sm">
           Senha
           <input
             name="senha"
@@ -81,27 +81,31 @@ function Login() {
             required
             value={form.senha}
             onChange={handleChange}
+            className="bg-bg-custom p-4 rounded-xl border-none font-primary text-sm transition-all focus:bg-white focus:outline focus:outline-1 focus:outline-primary focus:ring-4 focus:ring-primary/10"
           />
         </label>
 
         <button
           type="submit"
           disabled={loading || !formularioValido()}
+          className="bg-primary text-white text-base font-bold p-4 rounded-xl cursor-pointer font-primary hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? 'Entrando...' : 'Entrar'}
         </button>
       </form>
 
       {erro && (
-        <div className="div-error">
+        <div className="mt-4 text-sm text-red-500">
           <p>{erro}</p>
         </div>
       )}
 
-      <div className="div-footer">
-        <p>
+      <div className="flex items-center justify-center pt-12 pb-2">
+        <p className="text-sm">
           Não tem uma conta?{' '}
-          <a href="/cadastro">Criar conta</a>
+          <a href="/cadastro" className="no-underline text-primary font-bold hover:underline">
+            Criar conta
+          </a>
         </p>
       </div>
     </main>

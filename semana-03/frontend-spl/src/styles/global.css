@@ -1,29 +1,24 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+@theme {
+  --color-primary: #1E6F5C;
+  --color-secondary: #64748b;
+  --color-bg-custom: #edf1f5;
+  --font-primary: "Arial", "Helvetica", sans-serif;
+  
+  --shadow-login: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
-:root {
-  --primary-color: #1E6F5C;
-  --secondary-color: #64748b;
-  --bg-color: #edf1f5;
-  --white: #fff;
-  --font-primary: Arial, Helvetica, sans-serif;
-}
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
 
-body {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--bg-color);
-  font-family: var(--font-primary);
-  min-height: 100vh;
+  body {
+    @apply bg-bg-custom font-primary flex items-center justify-center min-h-screen text-secondary;
+  }
 }
 
 #root {
