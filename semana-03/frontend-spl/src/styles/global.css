@@ -5,7 +5,7 @@
   --color-secondary: #64748b;
   --color-bg-custom: #edf1f5;
   --font-primary: "Arial", "Helvetica", sans-serif;
-  
+
   --shadow-login: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
@@ -18,6 +18,197 @@
 
   body {
     @apply bg-bg-custom font-primary flex items-center justify-center min-h-screen text-secondary;
+  }
+}
+
+@layer components {
+  @keyframes fadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(18px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .icon-wrap {
+    @apply w-[52px] h-[52px] bg-primary rounded-[10px] flex items-center justify-center mx-auto mb-5;
+  }
+
+  .icon-wrap svg {
+    @apply w-[26px] h-[26px] stroke-white fill-none stroke-[2.2];
+  }
+
+  .heading {
+    @apply text-center mb-1;
+  }
+
+  .heading h1 {
+    @apply flex items-center justify-center gap-2 text-xl font-bold text-[#1c2b22];
+  }
+
+  .heading h1 svg {
+    @apply w-5 h-5 stroke-primary fill-none stroke-2;
+  }
+
+  .heading p {
+    @apply text-sm text-secondary mt-1 leading-[1.5];
+  }
+
+  .progress-track {
+    @apply w-full h-[6px] bg-[#ccddd4] rounded-full overflow-hidden;
+  }
+
+  .progress-fill {
+    @apply h-full bg-primary rounded-full transition-all duration-500 ease-in-out;
+  }
+
+  .progress-label {
+    @apply text-xs text-secondary mt-1.5;
+  }
+
+  .form {
+    @apply flex flex-col gap-5 mt-6;
+  }
+
+  .field {
+    @apply flex flex-col gap-1.5;
+  }
+
+  .field label {
+    @apply text-[14px] font-medium text-[#374b3e];
+  }
+
+  input[type="date"],
+  input[type="number"] {
+    @apply w-full p-[10px_12px] border-[1.5px] border-[#ccddd4] rounded-md font-primary text-sm text-[#1c2b22] bg-white transition-colors duration-200;
+  }
+
+  input[type="date"]:focus,
+  input[type="number"]:focus {
+    @apply border-primary outline-none;
+    box-shadow: 0 0 0 3px rgba(30, 111, 92, 0.12);
+  }
+
+  .select-wrap {
+    @apply relative mt-1.5;
+  }
+
+  .select-wrap select {
+    @apply w-full p-[10px_12px] pr-9 border-[1.5px] border-[#ccddd4] rounded-md font-primary text-sm text-[#1c2b22] bg-white appearance-none cursor-pointer transition-colors duration-200;
+  }
+
+  .select-wrap select:focus {
+    @apply border-primary outline-none;
+    box-shadow: 0 0 0 3px rgba(30, 111, 92, 0.12);
+  }
+
+  .select-wrap::after {
+    content: '';
+    @apply absolute right-3 top-1/2 -translate-y-1/2 w-0 h-0 pointer-events-none;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid #64748b;
+  }
+
+  .row-2 {
+    @apply grid grid-cols-2 gap-3;
+  }
+
+  .radio-group {
+    @apply flex flex-col gap-2 mt-1;
+  }
+
+  .radio-item {
+    @apply flex items-center gap-2.5 cursor-pointer text-[14px] text-[#1c2b22] py-0.5;
+  }
+
+  .radio-item input[type="radio"] {
+    @apply sr-only;
+  }
+
+  .radio-custom {
+    @apply w-[18px] h-[18px] min-w-[18px] border-2 border-[#ccddd4] rounded-full flex items-center justify-center transition-[border-color] duration-200;
+  }
+
+  .radio-item input[type="radio"]:checked+.radio-custom {
+    border-color: #1E6F5C;
+    background: #1E6F5C;
+    box-shadow: inset 0 0 0 3px #fff;
+  }
+
+  .radio-item input[type="radio"]:checked~.radio-label {
+    @apply text-primary font-medium;
+  }
+
+  .radio-label {
+    @apply text-[14px];
+  }
+
+  .checkbox-group {
+    @apply flex flex-col gap-2 mt-1;
+  }
+
+  .checkbox-item {
+    @apply flex items-center gap-2.5 cursor-pointer text-[14px] text-[#1c2b22];
+  }
+
+  .checkbox-item input[type="checkbox"] {
+    @apply sr-only;
+  }
+
+  .checkbox-custom {
+    @apply w-[18px] h-[18px] min-w-[18px] border-2 border-[#ccddd4] rounded flex items-center justify-center transition-all duration-150;
+  }
+
+  .checkbox-custom svg {
+    @apply w-[11px] h-[11px] stroke-white fill-none stroke-[3] opacity-0 transition-opacity duration-150;
+  }
+
+  .checkbox-item input[type="checkbox"]:checked+.checkbox-custom {
+    @apply bg-primary border-primary;
+  }
+
+  .checkbox-item input[type="checkbox"]:checked+.checkbox-custom svg {
+    @apply opacity-100;
+  }
+
+  .hint {
+    @apply block text-[11.5px] text-secondary mt-0.5;
+    display: none;
+  }
+
+  .field.error .hint {
+    display: block;
+  }
+
+  .field.error input,
+  .field.error select {
+    @apply border-[#c0392b];
+  }
+
+  .btn-primary {
+    @apply w-full text-white text-[15px] font-semibold p-[13px] rounded-[10px] cursor-pointer font-primary mt-1 border-none;
+    background: #1a4a3a;
+  }
+
+  .btn-primary:hover {
+    background: #2d6a50;
+  }
+
+  .btn-primary:active {
+    transform: scale(0.98);
+  }
+
+  .btn-back {
+    @apply w-full text-secondary text-[14px] font-medium p-[11px] cursor-pointer mt-0.5 border-none bg-transparent;
+  }
+
+  .btn-back:hover {
+    @apply text-[#1c2b22];
   }
 }
 
