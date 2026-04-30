@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Header from '../components/Header'
+import api from '../services/api'
 
 function Triagem() {
   const navigate = useNavigate()
@@ -89,14 +90,42 @@ function Triagem() {
     })
   }
 
-  function handleContinuar() {
+  async function handleContinuar() {
     if (etapaAtual === 1) {
       if (validateStep1()) {
         setEtapaAtual(2)
         limparErros()
       }
     } else {
-      console.log('Dados da triagem:', form)
+      const nivelMap = {
+        sedentario: 'Sedentária',
+        leve: 'Levemente ativo',
+        moderado: 'Moderadamente ativo',
+        intenso: 'Muito ativo',
+        extremo: 'Extremamente ativo'
+      }
+
+      const payload = {
+        data_nascimento: form.nascimento,
+        sexo: form.sexo,
+        peso_kg: parseFloat(form.peso),
+        altura_cm: parseFloat(form.altura),
+        condicoes: form.condicoes,
+        usa_medicamentos: form.medicamentos === 'sim',
+        nivel_atividade: nivelMap[form.atividade] || form.atividade
+      }
+
+      try {
+        await api.post('/triagem', payload)
+        navigate('/dashboard')
+      } catch (error) {
+        if (error.response?.status === 409) {
+          alert('Triagem já foi realizada anteriormente.')
+          navigate('/dashboard')
+        } else {
+          alert('Erro ao enviar triagem. Tente novamente.')
+        }
+      }
     }
   }
 
