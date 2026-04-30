@@ -71,7 +71,7 @@
   }
 
   .form {
-    @apply flex flex-col gap-5 mt-6;
+    @apply flex flex-col gap-4 mt-4;
   }
 
   .field {
@@ -79,7 +79,7 @@
   }
 
   .field label {
-    @apply text-[14px] font-medium text-[#374b3e];
+    @apply text-[13px] font-medium text-[#374b3e];
   }
 
   input[type="date"],
@@ -183,6 +183,7 @@
 
   .field.error .hint {
     display: block;
+    color: #c0392b;
   }
 
   .field.error input,
