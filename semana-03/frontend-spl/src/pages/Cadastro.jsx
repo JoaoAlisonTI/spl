@@ -1,8 +1,7 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import api from '../services/api'
 import Header from '../components/Header'
-import '../styles/cadastro.css'
 
 function validarCPF(cpf) {
   return cpf.replace(/\D/g, '').length === 11
@@ -95,14 +94,21 @@ function Cadastro() {
     }
   }
 
+  const inputClasses = (isError) =>
+    `p-4 rounded-xl font-primary text-sm transition-all focus:bg-white ${
+      isError
+        ? 'bg-red-50 outline outline-1 outline-red-500 ring-4 ring-red-500/20 text-red-900 placeholder-red-400 border-none'
+        : 'bg-bg-custom border-none focus:outline-1 focus:outline-primary focus:ring-4 focus:ring-primary/10'
+    }`
+
   return (
-    <main className="main-cadastro">
+    <main className="bg-white flex flex-col w-full max-w-[400px] p-7 rounded-xl shadow-login">
       <Header />
 
-      <h2>Criar sua conta</h2>
+      <h2 className="pb-5 text-xl font-bold">Criar sua conta</h2>
 
-      <form onSubmit={handleSubmit}>
-        <label>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <label className="flex flex-col gap-2 text-sm">
           Nome completo
           <input
             name="nome"
@@ -111,12 +117,12 @@ function Cadastro() {
             required
             value={form.nome}
             onChange={handleChange}
-            className={erros.nome ? 'input-error' : ''}
+            className={inputClasses(erros.nome)}
           />
-          {erros.nome && <small>{erros.nome}</small>}
+          {erros.nome && <small className="text-red-500 text-xs mt-1">{erros.nome}</small>}
         </label>
 
-        <label>
+        <label className="flex flex-col gap-2 text-sm">
           CPF
           <input
             name="cpf"
@@ -125,12 +131,12 @@ function Cadastro() {
             required
             value={form.cpf}
             onChange={handleChange}
-            className={erros.cpf ? 'input-error' : ''}
+            className={inputClasses(erros.cpf)}
           />
-          {erros.cpf && <small>{erros.cpf}</small>}
+          {erros.cpf && <small className="text-red-500 text-xs mt-1">{erros.cpf}</small>}
         </label>
 
-        <label>
+        <label className="flex flex-col gap-2 text-sm">
           Telefone
           <input
             name="telefone"
@@ -139,12 +145,12 @@ function Cadastro() {
             required
             value={form.telefone}
             onChange={handleChange}
-            className={erros.telefone ? 'input-error' : ''}
+            className={inputClasses(erros.telefone)}
           />
-          {erros.telefone && <small>{erros.telefone}</small>}
+          {erros.telefone && <small className="text-red-500 text-xs mt-1">{erros.telefone}</small>}
         </label>
 
-        <label>
+        <label className="flex flex-col gap-2 text-sm">
           E-mail
           <input
             name="email"
@@ -153,12 +159,12 @@ function Cadastro() {
             required
             value={form.email}
             onChange={handleChange}
-            className={erros.email ? 'input-error' : ''}
+            className={inputClasses(erros.email)}
           />
-          {erros.email && <small>{erros.email}</small>}
+          {erros.email && <small className="text-red-500 text-xs mt-1">{erros.email}</small>}
         </label>
 
-        <label>
+        <label className="flex flex-col gap-2 text-sm">
           Senha
           <input
             name="senha"
@@ -167,12 +173,12 @@ function Cadastro() {
             required
             value={form.senha}
             onChange={handleChange}
-            className={erros.senha ? 'input-error' : ''}
+            className={inputClasses(erros.senha)}
           />
-          {erros.senha && <small>{erros.senha}</small>}
+          {erros.senha && <small className="text-red-500 text-xs mt-1">{erros.senha}</small>}
         </label>
 
-        <label>
+        <label className="flex flex-col gap-2 text-sm">
           Confirmar senha
           <input
             name="confirmarSenha"
@@ -181,26 +187,32 @@ function Cadastro() {
             required
             value={form.confirmarSenha}
             onChange={handleChange}
-            className={erros.confirmarSenha ? 'input-error' : ''}
+            className={inputClasses(erros.confirmarSenha)}
           />
-          {erros.confirmarSenha && <small>{erros.confirmarSenha}</small>}
+          {erros.confirmarSenha && <small className="text-red-500 text-xs mt-1">{erros.confirmarSenha}</small>}
         </label>
 
-        <button type="submit" disabled={loading}>
+        <button 
+          type="submit" 
+          disabled={loading}
+          className="bg-primary text-white text-base font-bold p-4 rounded-xl cursor-pointer font-primary hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+        >
           {loading ? 'Criando conta...' : 'Criar conta'}
         </button>
       </form>
 
       {apiErro && (
-        <div className="div-error">
+        <div className="mt-4 text-sm text-red-500 text-center">
           <p>{apiErro}</p>
         </div>
       )}
 
-      <div className="div-footer">
-        <p>
+      <div className="flex items-center justify-center pt-8 pb-2">
+        <p className="text-sm">
           Já tem uma conta?{' '}
-          <a href="/">Fazer login</a>
+          <Link to="/" className="no-underline text-primary font-bold hover:underline">
+            Fazer login
+          </Link>
         </p>
       </div>
     </main>

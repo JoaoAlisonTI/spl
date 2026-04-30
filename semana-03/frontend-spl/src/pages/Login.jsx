@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import api from '../services/api'
 import Header from '../components/Header'
 
@@ -69,7 +69,7 @@ function Login() {
             required
             value={form.email}
             onChange={handleChange}
-            className="bg-bg-custom p-4 rounded-xl border-none font-primary text-sm transition-all focus:bg-white focus:outline focus:outline-1 focus:outline-primary focus:ring-4 focus:ring-primary/10"
+            className="bg-bg-custom p-4 rounded-xl border-none font-primary text-sm transition-all focus:bg-white focus:outline-1 focus:outline-primary focus:ring-4 focus:ring-primary/10"
           />
         </label>
 
@@ -81,7 +81,7 @@ function Login() {
             required
             value={form.senha}
             onChange={handleChange}
-            className="bg-bg-custom p-4 rounded-xl border-none font-primary text-sm transition-all focus:bg-white focus:outline focus:outline-1 focus:outline-primary focus:ring-4 focus:ring-primary/10"
+            className="bg-bg-custom p-4 rounded-xl border-none font-primary text-sm transition-all focus:bg-white focus:outline-1 focus:outline-primary focus:ring-4 focus:ring-primary/10"
           />
         </label>
 
@@ -103,9 +103,9 @@ function Login() {
       <div className="flex items-center justify-center pt-12 pb-2">
         <p className="text-sm">
           Não tem uma conta?{' '}
-          <a href="/cadastro" className="no-underline text-primary font-bold hover:underline">
+          <Link to="/cadastro" className="no-underline text-primary font-bold hover:underline">
             Criar conta
-          </a>
+          </Link>
         </p>
       </div>
     </main>
